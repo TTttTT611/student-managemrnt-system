@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <title>学生管理系统</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h1>学生管理系统</h1>
+      <section class="form-section">
+        <h2 id="form-title"></h2>
+        <form id="student-form">
+          <input type="hidden" id="student-id" />
+
+          <div class="form-row">
+            <label for="name">姓名</label>
+            <input id="name" type="text" required />
+          </div>
+
+          <div class="form-row">
+            <label for="age">年龄</label>
+            <input id="age" type="number" min="1" required />
+          </div>
+
+          <div class="form-row">
+            <label for="gender">性别</label>
+            <select id="gender" required>
+              <option value="">请选择</option>
+              <option value="男">男</option>
+              <option value="女">女</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label for="student-no">学号</label>
+            <input id="student-no" type="text" required />
+          </div>
+
+          <div class="form-row">
+            <label for="major">专业</label>
+            <input id="major" type="text" />
+          </div>
+          
+
+          <div class="form-actions">
+            <button type="submit" class="btn primary">保存</button>
+            <button type="button" id="reset-btn" class="btn secondary">
+              重置
+            </button>
+          </div>
+        </form>
+      </section>
+      <section class="table-section" style="display: none;">
+        <table>
+          <tbody id="students-tbody"></tbody>
+        </table>
+      </section>
+    </div>
+
+    <script>
+      const API_BASE = "http://127.0.0.1:8000";
+
+      async function fetchStudents() {
+        const res = await fetch(`${API_BASE}/students`);
+        const data = await res.json();
+        renderTable(data);
+      }
+
+      function renderTable(students) {
+        const tbody = document.getElementById("students-tbody");
+        tbody.innerHTML = "";
+
+        students.forEach((s) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${s.id}</td>
+            <td>${s.name}</td>
+            <td>${s.age}</td>
+            <td>${s.gender}</td>
+            <td>${s.student_no}</td>
+            <td>${s.major ?? ""}</td>
+            <td>
+              <button class="btn small" onclick="editStudent(${s.id})">编辑</button>
+              <button class="btn small danger" onclick="deleteStudent(${s.id})">删除</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      async function editStudent(id) {
+        const res = await fetch(`${API_BASE}/students/${id}`);
+        if (!res.ok) {
+          alert("获取学生信息失败");
+          return;
+        }
+        const s = await res.json();
+        document.getElementById("form-title").innerText = "编辑学生";
+        document.getElementById("student-id").value = s.id;
+        document.getElementById("name").value = s.name;
+        document.getElementById("age").value = s.age;
+        document.getElementById("gender").value = s.gender;
+        document.getElementById("student-no").value = s.student_no;
+        document.getElementById("student-no").disabled = false;
+        document.getElementById("major").value = s.major ?? "";
+      }
+
+      async function deleteStudent(id) {
+        if (!confirm("确定要删除该学生吗？")) return;
+        const res = await fetch(`${API_BASE}/students/${id}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) {
+          alert("删除失败");
+          return;
+        }
+        await fetchStudents();
+      }
+
+      function resetForm() {
+        document.getElementById("form-title").innerText = "新增学生";
+        document.getElementById("student-id").value = "";
+        document.getElementById("name").value = "";
+        document.getElementById("age").value = "";
+        document.getElementById("gender").value = "";
+        document.getElementById("student-no").value = "";
+        document.getElementById("student-no").disabled = false;
+        document.getElementById("major").value = "";
+      }
+
+      document
+        .getElementById("student-form")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const id = document.getElementById("student-id").value;
+          const body = {
+            name: document.getElementById("name").value,
+            age: Number(document.getElementById("age").value),
+            gender: document.getElementById("gender").value,
+            student_no: document.getElementById("student-no").value,
+            major: document.getElementById("major").value,
+          };
+
+          let url = `${API_BASE}/students`;
+          let method = "POST";
+          if (id) {
+            url = `${API_BASE}/students/${id}`;
+            method = "PUT";
+             // 编辑时不允许修改学号
+          }
+
+          const res = await fetch(url, {
+            method,
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(body),
+          });
+
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            alert(err.detail || "操作失败");
+            return;
+          }
+          alert("保存成功");
+          resetForm();
+          // fetchStudents();
+        });
+
+      document
+        .getElementById("reset-btn")
+        .addEventListener("click", () => resetForm());
+
+      // fetchStudents();
+    </script>
+  </body>
+  </html>
