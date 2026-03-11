@@ -96,7 +96,6 @@
           return;
         }
         const s = await res.json();
-        document.getElementById("form-title").innerText = "编辑学生";
         document.getElementById("student-id").value = s.id;
         document.getElementById("name").value = s.name;
         document.getElementById("age").value = s.age;
