@@ -11,20 +11,6 @@ You can add, edit, and delete student records.
 - MySQL
 - HTML / CSS / JS
 
-## Project Structure
-
-
-学生管理系统/
-├── backend/
-│   ├── main.py        # API routes
-│   ├── models.py      # database models
-│   ├── schemas.py     # data schemas
-│   └── database.py    # database connection
-├── frontend/
-│   ├── index.html
-│   └── style.css
-└── requirements.txt
-
 
 ## Getting Started
 
